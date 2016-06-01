@@ -1,8 +1,5 @@
 use strict;
 
-# Autor: Cristian Rohr (2016-05-26)
-# Convert biomart data to bed file
-
 open(IN,$ARGV[0]);
 while(my $line =<IN>)
 {
