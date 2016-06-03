@@ -1,18 +1,20 @@
+#!/usr/bin/env perl
+
 use strict;
 
-open(IN,"IDS");
+open(IN,"IDS3");
 my @archivos = <IN>;
 chomp(@archivos);
 close(IN);
 
 # Comando para correr gatk
-my $gatk ="java -jar ";
+my $gatk ="java -jar /share/apps/gatk-3.5/GenomeAnalysisTK.jar";
 
 # Reference usada para el alineamiento de los reads
-my $reference = "";
+my $reference = "/share/projects/templates/exomas_humanos/xx_references/hg19/Fasta/sequence.fasta";
 
 # bed manifest file de los amplicones
-my $design_bed = "";
+my $design_bed = "/share/projects/templates/exomas_humanos/xx_references/TruSightCardio/targets.bed";
 
 #Creo el archivo con la informacion de coverage
 foreach my $file(@archivos)
@@ -33,9 +35,9 @@ foreach my $file(@archivos)
 
 	# Aplico los filtros a los SNPs
 	#######################################################
-	qx($gatk -T VariantFiltration -R $reference -V $file/raw_SNPs.vcf --filterExpression "QD < 2.0" --filterName "QD" -o $file/filtered_SNPs_QD.vcf);
+	qx($gatk -T VariantFiltration -R $reference -V $file/raw_snps.vcf --filterExpression "QD < 2.0" --filterName "QD" -o $file/filtered_SNPs_QD.vcf);
 
-	qx($gatk -T VariantFiltration -R $reference -V $file/raw_SNPs.vcf --filterExpression "FS > 60.0" --filterName "FS" -o $file/filtered_SNPs_QD_FS.vcf);
+	qx($gatk -T VariantFiltration -R $reference -V $file/filtered_SNPs_QD.vcf --filterExpression "FS > 60.0" --filterName "FS" -o $file/filtered_SNPs_QD_FS.vcf);
 
 	qx($gatk -T VariantFiltration -R $reference -V $file/filtered_SNPs_QD_FS.vcf --filterExpression "MQ < 40.0" --filterName "MQ" -o $file/filtered_SNPs_QD_FS_MQ.vcf);
 
@@ -45,11 +47,11 @@ foreach my $file(@archivos)
 
 	# Borro archivos temporarios
 	#######################################################
-	qx(rm $file/raw_snps.vcf $file/filtered_SNPs_QD.vcf $file/filtered_SNPs_QD_FS.vcf $file/filtered_SNPs_QD_FS_MQ.vcf $file/filtered_SNPs_QD_FS_MQ_MQRS.vcf)
+	#qx(rm -f $file/raw_snps.vcf* $file/filtered_SNPs_QD.vcf* $file/filtered_SNPs_QD_FS.vcf* $file/filtered_SNPs_QD_FS_MQ.vcf* $file/filtered_SNPs_QD_FS_MQ_MQRS.vcf*);
 
 	# Aplico los filtros a los indels
 	#######################################################
-	qx($gatk -T VariantFiltration -R $reference -V $file/raw_INDELs.vcf --filterExpression "QD < 2.0" --filterName "QD" -o $file/filtered_INDELs_QD.vc);
+	qx($gatk -T VariantFiltration -R $reference -V $file/raw_indels.vcf --filterExpression "QD < 2.0" --filterName "QD" -o $file/filtered_INDELs_QD.vcf);
 
 	qx($gatk -T VariantFiltration -R $reference -V $file/filtered_INDELs_QD.vcf --filterExpression "FS > 200.0" --filterName "FS" -o $file/filtered_INDELs_QD_FS.vcf);
 
@@ -57,7 +59,7 @@ foreach my $file(@archivos)
 
 	# Borro archivos temporarios
 	#######################################################
-	qx(rm $file/filtered_INDELs_QD.vcf $file/filtered_INDELs_QD_FS.vcf);
+	#qx(rm -f $file/raw_indels.vcf* $file/filtered_INDELs_QD.vcf* $file/filtered_INDELs_QD_FS.vcf*);
 
 	# Hago un merge de los SNPs y indels filtrados
 	#######################################################
@@ -65,7 +67,7 @@ foreach my $file(@archivos)
 
 	# Borro archivos temporarios
 	#######################################################
-	qx(rm $file/filtered_INDELs_QD_FS_RPRS.vcf $file/filtered_SNPs_QD_FS_MQ_MQRS_RPRS.vcf);	
+	#qx(rm -f $file/filtered_INDELs_QD_FS_RPRS.vcf $file/filtered_SNPs_QD_FS_MQ_MQRS_RPRS.vcf);	
 }
 
 
